@@ -27,7 +27,7 @@ public class Client {
 
                 socketChannel.write( ByteBuffer.wrap( input.getBytes( StandardCharsets.UTF_8 ) ) );
 
-                Thread.sleep( 2000 );
+//                Thread.sleep( 2000 );
 
                 int bytesCount = socketChannel.read( inputBuffer );
 
@@ -38,9 +38,10 @@ public class Client {
 
                 inputBuffer.clear();
             }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
+//        catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
 
 
     }

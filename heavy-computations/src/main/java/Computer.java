@@ -24,5 +24,10 @@ public class Computer {
         return "%.3f мс".formatted((double) duration / 1_000_000f);
     }
 
-
+    public static void main(String[] args) {
+        System.out.println(Long.MAX_VALUE);
+        for (int i = 1; i < 100; i++) {
+            System.out.println(i + "\t" + fibonacci(i));
+        }
+    }
 }

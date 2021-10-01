@@ -4,20 +4,19 @@ import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
 
 public class Server {
-    public static final int CIT_LIMIT = 15;
+    private static final int CIT_LIMIT = 15;
 
     public static void main(String[] args) throws IOException {
 
-        // Занимаем порт, определяя серверный сокет
+        System.out.println("Сервер запускается");
         final ServerSocketChannel serverChannel = ServerSocketChannel.open();
         serverChannel.bind(new InetSocketAddress("localhost", 4160));
         while (true) {
-            // Ждем подключения клиента и получаем потоки для дальнейшей работы
             try (SocketChannel socketChannel = serverChannel.accept()) {
-                // Определяем буфер для получения данных
+                System.out.println("Связались с " + socketChannel.getRemoteAddress());
+
                 final ByteBuffer inputBuffer = ByteBuffer.allocate(2 << 10);
 
                 socketChannel.write(
@@ -37,7 +36,7 @@ public class Server {
                     System.out.println("Получено от клиента: " + clientsRequest);
 
                     if (!clientsRequest.startsWith("fib")) {
-                        socketChannel.write(echo(clientsRequest,
+                        socketChannel.write(askBack(clientsRequest,
                                 "это конечно хорошо, но как насчёт Фибоначчи?" )
                         );
                         continue;
@@ -45,8 +44,8 @@ public class Server {
 
                     String[] request = clientsRequest.split(" ");
                     if (request.length < 2) {
-                        socketChannel.write(echo(clientsRequest,
-                                "это прикольно, но нужно соблюсти формат." )
+                        socketChannel.write(askBack(clientsRequest,
+                                "это замечательно, но нужно соблюсти формат." )
                         );
                         continue;
                     }
@@ -55,14 +54,15 @@ public class Server {
                     try {
                         argument = Integer.parseInt(request[1]);
                     } catch (NumberFormatException e) {
-                        socketChannel.write(echo(clientsRequest,
+                        socketChannel.write(askBack(clientsRequest,
                                 "это прикольно, но нужно соблюсти формат." )
                         );
                         continue;
                     }
 
                     socketChannel.write(transmit(computingResponse(argument)));
-                    socketChannel.write(transmit("Команда получена!"));
+//                    socketChannel.write(transmit("Значение " + argument + " принято на вычисление."));
+
 //                    long result = Computer.fibonacci(argument);
 //                    System.out.println("Вычислен результат: " + result);
 //                    socketChannel.write(ByteBuffer.wrap(
@@ -80,7 +80,7 @@ public class Server {
         }
     }
 
-    private static ByteBuffer echo(String msg, String answer) {
+    private static ByteBuffer askBack(String msg, String answer) {
         return ByteBuffer.wrap(
                 "%s – %s"
                 .formatted(
@@ -96,15 +96,16 @@ public class Server {
     }
 
     private static String computingResponse(int arg) {
+        if (arg > 93) return "Величина результат превышает 4 байта, такие вычисления ещё не реализованы!";
         long res;
-        long timeOn = new Date().getTime();
+        long timeOn = System.nanoTime();
         try {
             res = Computer.fibonacci(arg);
-            Thread.sleep(1500);
+//            Thread.sleep(1500);
         } catch (Exception e) {
             return e.getMessage();
         }
-        long time = new Date().getTime() - timeOn;
+        long time = System.nanoTime() - timeOn;
         return "%d-й член Фибоначчи вычислен за %s: %d%n"
                 .formatted(arg, Computer.nanoTimeFormatter(time), res);
     }
