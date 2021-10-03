@@ -6,11 +6,13 @@ import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 
 public class WSE_Server {
+
     public static void main(String[] args) throws IOException {
         final ServerSocketChannel serverChannel = ServerSocketChannel.open();
-        serverChannel.bind(new InetSocketAddress("localhost", 2211));
+        serverChannel.bind(new InetSocketAddress(WSE_Config.HOSTNAME, WSE_Config.PORT));
 //        StringBuilder inputData = new StringBuilder();
         StringBuilder processedData = new StringBuilder();
+        System.out.println("Сервер запускается");
 
         server:
         while (true) {
@@ -27,11 +29,14 @@ public class WSE_Server {
                         ));
                 System.out.println("Отправлено приветствие");
 
+                String nextData = "";
                 while (socketChannel.isConnected()) {
                     // читаем, что отправил клиент
                     int bytesCount = socketChannel.read(inputBuffer);
                     if (bytesCount == -1) break;
-                    String nextData = new String(inputBuffer.array(), 0, bytesCount, StandardCharsets.UTF_8);
+                    if (bytesCount > 0) {
+                        nextData = new String(inputBuffer.array(), 0, bytesCount, StandardCharsets.UTF_8);
+                    }
                     inputBuffer.clear();
                     System.out.println("Получено от клиента: " + nextData);
 
@@ -40,17 +45,17 @@ public class WSE_Server {
                     if ("=".equals(nextData) || "end".equals(nextData) || "terminate".equals(nextData)) {
                         // получаем обработанный результат
                         String result = processedData.toString();
+                        processedData = new StringBuilder();
                         // если результат пустой, говорим об этом
-                        if (result.isBlank()) {
+                        if (result.isBlank() && "=".equals(nextData)) {
                             result = "<нет данных для вывода>";
                         }
                         // отправляем обработанный результат
                         socketChannel.write(transmit(result));
                         System.out.println("Отправлено клиенту: " + result);
-                        processedData = new StringBuilder();
 
                         if ("terminate".equals(nextData)) {
-                            System.out.println("От клиента получена команда остановки");
+                            System.out.println("От клиента получена команда на остановку");
                             break server;
                         }
                     } else {

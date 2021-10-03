@@ -6,15 +6,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
 public class WSE_Client {
-    public static final String HOSTNAME = "127.0.0.1";
-    public static final int PORT = 2211;
-
 
     public static void main(String[] args) throws IOException {
         final SocketChannel socketChannel = SocketChannel.open();
 
         try (socketChannel; Scanner scanner = new Scanner(System.in)) {
-            socketChannel.connect(new InetSocketAddress(HOSTNAME, PORT));
+            socketChannel.connect(new InetSocketAddress(WSE_Config.HOSTNAME, WSE_Config.PORT));
+            System.out.println("Соединение с " + socketChannel.getRemoteAddress());
 
             //  создание входного буфера
             final ByteBuffer inputBuffer = ByteBuffer.allocate(2 << 10);
@@ -38,14 +36,19 @@ public class WSE_Client {
                     inputBuffer.clear();
                     System.out.println("Ответ сервера:");
                     // выводим в консоль прочитанные байты как строку
-                    System.out.println(new String(inputBuffer.array(),
+                    String response = new String(inputBuffer.array(),
                             0,
                             bytesCount,
-                            StandardCharsets.UTF_8));
+                            StandardCharsets.UTF_8);
+
+                    if (!response.isBlank()){
+                        System.out.println(response);
+                    }
                 }
 
-            } while (!("terminate".equals(input) || "end".equals(input)));
+            } while (!"end".equals(input) && !"terminate".equals(input));
+            socketChannel.finishConnect();
         }
-
+        System.out.println("Завершение сеанса");
     }
 }
