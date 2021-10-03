@@ -1,3 +1,4 @@
 rootProject.name = 'nio-interaction'
 include 'heavy-computations'
+include 'whitespace-eliminator'
 

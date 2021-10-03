@@ -24,6 +24,7 @@ public class Server {
                                 Здравствуйте, вас приветствует %s!
                                 Сегодня вам доступно вычисление N-го члена Фибоначчи!
                                 Чтобы воспользоваться услугой, отправьте команду 'fib x', где 'x' – интересующий вас член."""
+                                .formatted(Computer.NAME)
                 ));
                 System.out.println("Отправлено приветствие");
 
@@ -61,8 +62,8 @@ public class Server {
                     }
 
                     socketChannel.write(transmit(computingResponse(argument)));
-//                    socketChannel.write(transmit("Значение " + argument + " принято на вычисление."));
 
+//                    socketChannel.write(transmit("Значение " + argument + " принято на вычисление."));
 //                    long result = Computer.fibonacci(argument);
 //                    System.out.println("Вычислен результат: " + result);
 //                    socketChannel.write(ByteBuffer.wrap(
@@ -70,7 +71,6 @@ public class Server {
 //                            .formatted(argument, result)
 //                            .getBytes(StandardCharsets.UTF_8))
 //                    );
-
 
                 }
 
@@ -106,8 +106,8 @@ public class Server {
             return e.getMessage();
         }
         long time = System.nanoTime() - timeOn;
-        return "%d-й член Фибоначчи вычислен за %s: %d%n"
-                .formatted(arg, Computer.nanoTimeFormatter(time), res);
+        return "%d-й член Фибоначчи: %d (вычислен за %s)%n"
+                .formatted(arg, res, Computer.nanoTimeFormatter(time));
     }
 
 

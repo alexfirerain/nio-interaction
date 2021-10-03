@@ -13,28 +13,29 @@ public class Client {
     public static void main(String[] args) throws IOException {
         final SocketChannel socketChannel = SocketChannel.open();
 
-        try (socketChannel; Scanner scanner = new Scanner( System.in )) {
-            socketChannel.connect( new InetSocketAddress( HOSTNAME, PORT ) );
-            final ByteBuffer inputBuffer = ByteBuffer.allocate( 2 << 10 );
-            System.out.println( new String( inputBuffer.array(), 0,
-                    socketChannel.read( inputBuffer ), StandardCharsets.UTF_8 ).trim() );
+        try (socketChannel; Scanner scanner = new Scanner(System.in))
+        {
+            socketChannel.connect(new InetSocketAddress(HOSTNAME, PORT));
+            final ByteBuffer inputBuffer = ByteBuffer.allocate(2 << 10);
+            System.out.println(new String(inputBuffer.array(), 0,
+                    socketChannel.read(inputBuffer), StandardCharsets.UTF_8).trim());
             inputBuffer.clear();
             String input;
 
             while (true) {
                 input = scanner.nextLine();
-                if ("end".equals( input )) break;
+                if ("end".equals(input)) break;
 
-                socketChannel.write( ByteBuffer.wrap( input.getBytes( StandardCharsets.UTF_8 ) ) );
+                socketChannel.write(ByteBuffer.wrap(input.getBytes(StandardCharsets.UTF_8)));
 
 //                Thread.sleep( 2000 );
 
-                int bytesCount = socketChannel.read( inputBuffer );
+                int bytesCount = socketChannel.read(inputBuffer);
 
-                System.out.println( new String( inputBuffer.array(),
+                System.out.println(new String(inputBuffer.array(),
                         0,
                         bytesCount,
-                        StandardCharsets.UTF_8 ).trim() );
+                        StandardCharsets.UTF_8).trim());
 
                 inputBuffer.clear();
             }
