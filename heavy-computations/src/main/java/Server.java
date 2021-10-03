@@ -13,6 +13,7 @@ public class Server {
         System.out.println("Сервер запускается");
         final ServerSocketChannel serverChannel = ServerSocketChannel.open();
         serverChannel.bind(new InetSocketAddress("localhost", 4160));
+        server:
         while (true) {
             try (SocketChannel socketChannel = serverChannel.accept()) {
                 System.out.println("Связались с " + socketChannel.getRemoteAddress());
@@ -35,8 +36,12 @@ public class Server {
                     String clientsRequest = new String(inputBuffer.array(), 0, bytesCount, StandardCharsets.UTF_8);
                     inputBuffer.clear();
                     System.out.println("Получено от клиента: " + clientsRequest);
+                    if ("terminate".equals(clientsRequest)) {
+                        System.out.println("От клиента получена команда остановки");
+                        break server;
+                    }
 
-                    if (!clientsRequest.startsWith("fib")) {
+                    if (!clientsRequest.startsWith("fib") && !clientsRequest.startsWith("фиб")) {
                         socketChannel.write(askBack(clientsRequest,
                                 "это конечно хорошо, но как насчёт Фибоначчи?" )
                         );
@@ -78,6 +83,7 @@ public class Server {
                 System.out.println(err.getMessage());
             }
         }
+        System.out.println("Сервер останавливается");
     }
 
     private static ByteBuffer askBack(String msg, String answer) {
@@ -96,7 +102,6 @@ public class Server {
     }
 
     private static String computingResponse(int arg) {
-        if (arg > 93) return "Величина результат превышает 4 байта, такие вычисления ещё не реализованы!";
         long res;
         long timeOn = System.nanoTime();
         try {
@@ -109,6 +114,4 @@ public class Server {
         return "%d-й член Фибоначчи: %d (вычислен за %s)%n"
                 .formatted(arg, res, Computer.nanoTimeFormatter(time));
     }
-
-
 }

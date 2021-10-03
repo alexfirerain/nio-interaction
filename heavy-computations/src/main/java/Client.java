@@ -16,28 +16,34 @@ public class Client {
         try (socketChannel; Scanner scanner = new Scanner(System.in))
         {
             socketChannel.connect(new InetSocketAddress(HOSTNAME, PORT));
+
+            //  создание входного буфера
             final ByteBuffer inputBuffer = ByteBuffer.allocate(2 << 10);
+            // вывод на экран того, что получили во входной буфер
             System.out.println(new String(inputBuffer.array(), 0,
                     socketChannel.read(inputBuffer), StandardCharsets.UTF_8).trim());
             inputBuffer.clear();
-            String input;
 
+            // создание строки ввода
+            String input;
             while (true) {
                 input = scanner.nextLine();
                 if ("end".equals(input)) break;
 
+                // отправляем в канал то, что набрали в консоли
                 socketChannel.write(ByteBuffer.wrap(input.getBytes(StandardCharsets.UTF_8)));
 
-//                Thread.sleep( 2000 );
+                if ("terminate".equals(input)) break;
 
+                // определяем, сколько байт читается с буфера
                 int bytesCount = socketChannel.read(inputBuffer);
-
+                inputBuffer.clear();
+                // выводим в консоль прочитанные байты как строку
                 System.out.println(new String(inputBuffer.array(),
                         0,
                         bytesCount,
-                        StandardCharsets.UTF_8).trim());
+                        StandardCharsets.UTF_8));
 
-                inputBuffer.clear();
             }
         }
 //        catch (InterruptedException e) {

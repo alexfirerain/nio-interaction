@@ -3,7 +3,11 @@ public class Computer {
 
 
     public static long fibonacci(int member) throws IllegalArgumentException {
-        if (member < 1) throw new IllegalArgumentException("Non-natural computing not implemented");
+        if (member < 1)
+            throw new IllegalArgumentException("Non-natural computing not implemented");
+        if (member > 93)
+            throw new IllegalArgumentException("Computing over 4-bytes result not implemented");
+
         int next = 1;
         long prev = 1;
         long cur = 0;
@@ -24,10 +28,10 @@ public class Computer {
         return "%.3f мс".formatted((double) duration / 1_000_000f);
     }
 
-    public static void main(String[] args) {
-        System.out.println(Long.MAX_VALUE);
-        for (int i = 1; i < 100; i++) {
-            System.out.println(i + "\t" + fibonacci(i));
-        }
-    }
+//    public static void main(String[] args) {
+//        System.out.println(Long.MAX_VALUE);
+//        for (int i = 1; i < 100; i++) {
+//            System.out.println(i + "\t" + fibonacci(i));
+//        }
+//    }
 }
