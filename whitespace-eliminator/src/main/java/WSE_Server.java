@@ -5,6 +5,13 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Сервер-Пробелоуничтожитель.
+ * При запуске слушает подключения с адреса "WSE_Config.HOSTNAME, WSE_Config.PORT",
+ * принимает строки от клиента и, по строке '=', отдаёт их обратно, но без пробелов.
+ * Завершение работы с клиентом осуществляется строкой 'end' от клиента.
+ * Остановка работы осуществляется строкой 'terminate' от клиента.
+ */
 public class WSE_Server {
 
     public static void main(String[] args) throws IOException {
@@ -47,8 +54,15 @@ public class WSE_Server {
                         String result = processedData.toString();
                         processedData = new StringBuilder();
                         // если результат пустой, говорим об этом
-                        if (result.isBlank() && "=".equals(nextData)) {
+                        if (result.isBlank()) {
                             result = "<нет данных для вывода>";
+                        }
+                        if ("end".equals(nextData) || "terminate".equals(nextData)) {
+                            if ("<нет данных для вывода>".equals(result)) {
+                                result = "<завершение работы с сервером>";
+                            } else {
+                                result += "\n<завершение работы с сервером>";
+                            }
                         }
                         // отправляем обработанный результат
                         socketChannel.write(transmit(result));

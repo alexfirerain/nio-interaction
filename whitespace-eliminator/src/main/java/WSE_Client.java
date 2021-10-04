@@ -23,13 +23,14 @@ public class WSE_Client {
 
             // создание строки ввода
             String input;
+
             do {
                 input = scanner.nextLine();
 
                 // отправляем в канал то, что набрали в консоли
                 socketChannel.write(ByteBuffer.wrap(input.getBytes(StandardCharsets.UTF_8)));
 
-
+                // если запросили вывод или выход, надо получить данные от сервера
                 if ("=".equals(input) || "terminate".equals(input) || "end".equals(input)) {
                     // определяем, сколько байт читается с буфера
                     int bytesCount = socketChannel.read(inputBuffer);
@@ -41,9 +42,12 @@ public class WSE_Client {
                             bytesCount,
                             StandardCharsets.UTF_8);
 
-                    if (!response.isBlank()){
-                        System.out.println(response);
-                    }
+//                    if (!response.isBlank()) {
+                    System.out.println(response);
+//                    } else {
+//                        System.out.println("---");
+//                        break;
+//                    }
                 }
 
             } while (!"end".equals(input) && !"terminate".equals(input));
