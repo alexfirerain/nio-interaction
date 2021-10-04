@@ -26,10 +26,8 @@ public class WSE_Client {
 
             do {
                 input = scanner.nextLine();
-
                 // отправляем в канал то, что набрали в консоли
                 socketChannel.write(ByteBuffer.wrap(input.getBytes(StandardCharsets.UTF_8)));
-
                 // если запросили вывод или выход, надо получить данные от сервера
                 if ("=".equals(input) || "terminate".equals(input) || "end".equals(input)) {
                     // определяем, сколько байт читается с буфера
@@ -41,18 +39,11 @@ public class WSE_Client {
                             0,
                             bytesCount,
                             StandardCharsets.UTF_8);
-
-//                    if (!response.isBlank()) {
                     System.out.println(response);
-//                    } else {
-//                        System.out.println("---");
-//                        break;
-//                    }
                 }
-
             } while (!"end".equals(input) && !"terminate".equals(input));
             socketChannel.finishConnect();
         }
-        System.out.println("Завершение сеанса");
+        System.out.println("\nЗавершение работы");
     }
 }

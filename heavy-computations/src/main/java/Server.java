@@ -1,8 +1,10 @@
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.net.InetSocketAddress;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.nio.ByteBuffer;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 
 public class Server {
@@ -11,25 +13,26 @@ public class Server {
     public static void main(String[] args) throws IOException {
 
         System.out.println("Сервер запускается");
-        final ServerSocketChannel serverChannel = ServerSocketChannel.open();
-        serverChannel.bind(new InetSocketAddress("localhost", 4160));
+//        final ServerSocketChannel serverChannel = ServerSocketChannel.open();
+        final ServerSocket serverSocket = new ServerSocket(4160);
+//        serverChannel.bind(new InetSocketAddress("localhost", 4160));
         server:
         while (true) {
-            try (SocketChannel socketChannel = serverChannel.accept()) {
-                System.out.println("Связались с " + socketChannel.getRemoteAddress());
+            try (Socket socket = serverSocket.accept();
+                 PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+                System.out.println("Связались с " + socket.getRemoteSocketAddress());
 
                 final ByteBuffer inputBuffer = ByteBuffer.allocate(2 << 10);
 
-                socketChannel.write(
-                        transmit("""
+                out.write("""
                                 Здравствуйте, вас приветствует %s!
                                 Сегодня вам доступно вычисление N-го члена Фибоначчи!
                                 Чтобы воспользоваться услугой, отправьте команду 'fib x', где 'x' – интересующий вас член."""
-                                .formatted(Computer.NAME)
-                ));
+                                .formatted(Computer.NAME));
                 System.out.println("Отправлено приветствие");
 
-                while (socketChannel.isConnected()) {
+                while (socket.isConnected()) {
                     int bytesCount = socketChannel.read(inputBuffer);
                     if (bytesCount == -1) break;
 
@@ -97,7 +100,7 @@ public class Server {
         );
     }
 
-    private static ByteBuffer transmit(String msg) {
+    private static String transmit(String msg) {
         return ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
     }
 

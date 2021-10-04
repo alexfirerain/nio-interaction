@@ -4,6 +4,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * Сервер-Пробелоуничтожитель.
@@ -17,25 +19,22 @@ public class WSE_Server {
     public static void main(String[] args) throws IOException {
         final ServerSocketChannel serverChannel = ServerSocketChannel.open();
         serverChannel.bind(new InetSocketAddress(WSE_Config.HOSTNAME, WSE_Config.PORT));
-//        StringBuilder inputData = new StringBuilder();
         StringBuilder processedData = new StringBuilder();
-        System.out.println("Сервер запускается");
+        consoler("Сервер запускается");
 
         server:
         while (true) {
             try (SocketChannel socketChannel = serverChannel.accept()) {
-                System.out.println("Связались с " + socketChannel.getRemoteAddress());
-
+                consoler("Связались с " + socketChannel.getRemoteAddress());
                 final ByteBuffer inputBuffer = ByteBuffer.allocate(2 << 10);
-
                 socketChannel.write(transmit("""
+                                
                                 Здравствуйте, вас приветствует сервис WhiteSpace Eliminator!
                                 Вводите и отправляйте свой текст.
                                 Когда нужно получить обработанный результат, отправьте '=',
                                 \tчтобы закончить работу, отправьте 'end'."""
                         ));
-                System.out.println("Отправлено приветствие");
-
+                consoler("Отправлено приветствие");
                 String nextData = "";
                 while (socketChannel.isConnected()) {
                     // читаем, что отправил клиент
@@ -45,51 +44,60 @@ public class WSE_Server {
                         nextData = new String(inputBuffer.array(), 0, bytesCount, StandardCharsets.UTF_8);
                     }
                     inputBuffer.clear();
-                    System.out.println("Получено от клиента: " + nextData);
-
+                    consoler("Получено от клиента: " + nextData);
+                    boolean sessionClosing = "end".equals(nextData) || "terminate".equals(nextData);
 
                     // если пользователь запросил вывод или вообще выходит, отправляем результат
-                    if ("=".equals(nextData) || "end".equals(nextData) || "terminate".equals(nextData)) {
+                    if ("=".equals(nextData) || sessionClosing) {
                         // получаем обработанный результат
                         String result = processedData.toString();
                         processedData = new StringBuilder();
+
                         // если результат пустой, говорим об этом
                         if (result.isBlank()) {
-                            result = "<нет данных для вывода>";
-                        }
-                        if ("end".equals(nextData) || "terminate".equals(nextData)) {
-                            if ("<нет данных для вывода>".equals(result)) {
-                                result = "<завершение работы с сервером>";
-                            } else {
-                                result += "\n<завершение работы с сервером>";
-                            }
+                            result = sessionClosing ?
+                                    "<завершение сеанса>" :
+                                    "<нет данных для вывода>";
+                        } else if (sessionClosing) {
+                                result += "\n<завершение сеанса>";
                         }
                         // отправляем обработанный результат
                         socketChannel.write(transmit(result));
-                        System.out.println("Отправлено клиенту: " + result);
-
+                        consoler("Отправлено клиенту: " + result);
+                        if ("end".equals(nextData)) {
+                            consoler("Завершение сеанса с клиентом");
+                        }
                         if ("terminate".equals(nextData)) {
-                            System.out.println("От клиента получена команда на остановку");
+                            consoler("От клиента получена команда на остановку");
                             break server;
                         }
                     } else {
                         // иначе отправляем результат на обработку
                         processedData.append(processString(nextData));
                     }
-
                 }
-
             } catch (IOException err) {
-                System.out.println(err.getMessage());
+                consoler(err.getMessage());
             }
         }
-        System.out.println("Сервер останавливается");
+        consoler("Сервер останавливается");
     }
 
+    /**
+     * Возвращает байт-буфер для передачи через канал.
+     * Содержание вычисляется на основе переданной строки в указанной кодировке.
+     * @param msg передаваемое сообщение.
+     * @return соответствующий переданному сообщению буфер.
+     */
     private static ByteBuffer transmit(String msg) {
         return ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
     }
 
+    /**
+     * Возвращает переданную строку, удалив из неё все пробелы.
+     * @param data переданная строка.
+     * @return обработанную строку.
+     */
     private static String processString(String data) {
         String[] words = data.split(" ");
         StringBuilder builder = new StringBuilder();
@@ -98,6 +106,14 @@ public class WSE_Server {
             builder.append(s);
         }
         return builder.toString();
+    }
+
+    /**
+     * Консоль-логер: выводит в консоль текущее время (минуты:секунды) и событие.
+     * @param event отображаемое событие.
+     */
+    private static void consoler(String event) {
+        System.out.println(new SimpleDateFormat("mm:ss - ").format(new Date()) + event);
     }
 
 }
