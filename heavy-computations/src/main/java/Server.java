@@ -9,52 +9,49 @@ import java.nio.charset.StandardCharsets;
 
 public class Server {
     private static final int CIT_LIMIT = 15;
+    private static final String WELCOME = ("Здравствуйте, вас приветствует %s! " +
+                                           "Сегодня вам доступно вычисление N-го члена Фибоначчи! " +
+                                           "Чтобы воспользоваться услугой, отправьте команду 'fib x', где 'x' – интересующий вас член.")
+            .formatted(/*GUSCI_Config.WELCOME,*/ Computer.NAME);
 
     public static void main(String[] args) throws IOException {
 
         System.out.println("Сервер запускается");
-//        final ServerSocketChannel serverChannel = ServerSocketChannel.open();
         final ServerSocket serverSocket = new ServerSocket(GUSCI_Config.FBC_PORT);
-//        serverChannel.bind(new InetSocketAddress("localhost", 4160));
         server:
         while (true) {
             try (Socket socket = serverSocket.accept();
-                 PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream())))
+                 PrintWriter socketOut = new PrintWriter(socket.getOutputStream(), true);
+                 BufferedReader socketIn = new BufferedReader(new InputStreamReader(socket.getInputStream())))
             {
                 System.out.println("Связались с " + socket.getRemoteSocketAddress());
 
-                out.write("""
-                                Здравствуйте, вас приветствует %s!
-                                Сегодня вам доступно вычисление N-го члена Фибоначчи!
-                                Чтобы воспользоваться услугой, отправьте команду 'fib x', где 'x' – интересующий вас член."""
-                                .formatted(Computer.NAME));
+                socketOut.println(WELCOME);
                 System.out.println("Отправлено приветствие");
 
+                String clientsRequest;
                 while (socket.isConnected()) {
-                    int bytesCount = socketChannel.read(inputBuffer);
-                    if (bytesCount == -1) break;
+                    clientsRequest = socketIn.readLine();
 
-                    String clientsRequest = new String(inputBuffer.array(), 0, bytesCount, StandardCharsets.UTF_8);
-                    inputBuffer.clear();
                     System.out.println("Получено от клиента: " + clientsRequest);
+
                     if ("terminate".equals(clientsRequest)) {
                         System.out.println("От клиента получена команда остановки");
                         break server;
                     }
 
                     if (!clientsRequest.startsWith("fib") && !clientsRequest.startsWith("фиб")) {
-                        socketChannel.write(askBack(clientsRequest,
-                                "это конечно хорошо, но как насчёт Фибоначчи?" )
-                        );
+                        String response = askBack(clientsRequest,"это конечно хорошо, но как насчёт Фибоначчи?");
+                        socketOut.println(response);
+                        System.out.println("Отправлено клиенту: " + response);
                         continue;
                     }
 
                     String[] request = clientsRequest.split(" ");
                     if (request.length < 2) {
-                        socketChannel.write(askBack(clientsRequest,
-                                "это замечательно, но нужно соблюсти формат." )
-                        );
+                        String response = askBack(clientsRequest,"это замечательно, но нужно соблюсти формат.");
+                        socketOut.println(response);
+                        System.out.println("Отправлено клиенту: " + response);
                         continue;
                     }
 
@@ -62,25 +59,23 @@ public class Server {
                     try {
                         argument = Integer.parseInt(request[1]);
                     } catch (NumberFormatException e) {
-                        socketChannel.write(askBack(clientsRequest,
-                                "это прикольно, но нужно соблюсти формат." )
-                        );
+                        String response = askBack(clientsRequest,"это прикольно, но нужно соблюсти формат.");
+                        socketOut.println(response);
+                        System.out.println("Отправлено клиенту: " + response);
                         continue;
                     }
 
-                    socketChannel.write(transmit(computingResponse(argument)));
+                    String response = computingResponse(argument);
+                    socketOut.println(response);
+                    System.out.println("Отправлено клиенту: " + response);
 
-//                    socketChannel.write(transmit("Значение " + argument + " принято на вычисление."));
+//                    out.write("Значение " + argument + " принято на вычисление."));
 //                    long result = Computer.fibonacci(argument);
 //                    System.out.println("Вычислен результат: " + result);
-//                    socketChannel.write(ByteBuffer.wrap(
-//                            "Вычислен %d-й член: %d"
-//                            .formatted(argument, result)
-//                            .getBytes(StandardCharsets.UTF_8))
-//                    );
+//                    out.write("Вычислен %d-й член: %d".formatted(argument, result));
 
                 }
-
+                System.out.println("Завершение сеанса с клиентом");
             } catch (IOException err) {
                 System.out.println(err.getMessage());
             }
@@ -95,9 +90,6 @@ public class Server {
                                 answer);
     }
 
-    private static String transmit(String msg) {
-        return ByteBuffer.wrap(msg.getBytes(StandardCharsets.UTF_8));
-    }
 
     private static String computingResponse(int arg) {
         long res;
@@ -105,6 +97,7 @@ public class Server {
         try {
             res = Computer.fibonacci(arg);
 //            Thread.sleep(1500);
+            System.out.println("Вычислен результат: " + res);
         } catch (Exception e) {
             return e.getMessage();
         }
