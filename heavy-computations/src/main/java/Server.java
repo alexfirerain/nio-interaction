@@ -25,15 +25,14 @@ public class Server {
                  BufferedReader socketIn = new BufferedReader(new InputStreamReader(socket.getInputStream())))
             {
                 System.out.println("Связались с " + socket.getRemoteSocketAddress());
-
-                socketOut.println(WELCOME);
-                System.out.println("Отправлено приветствие");
+                sendResponse(socketOut, WELCOME);
 
                 String clientsRequest;
                 while (socket.isConnected()) {
                     clientsRequest = socketIn.readLine();
-
                     System.out.println("Получено от клиента: " + clientsRequest);
+
+                    if (clientsRequest == null) break;
 
                     if ("terminate".equals(clientsRequest)) {
                         System.out.println("От клиента получена команда остановки");
@@ -41,17 +40,17 @@ public class Server {
                     }
 
                     if (!clientsRequest.startsWith("fib") && !clientsRequest.startsWith("фиб")) {
-                        String response = askBack(clientsRequest,"это конечно хорошо, но как насчёт Фибоначчи?");
-                        socketOut.println(response);
-                        System.out.println("Отправлено клиенту: " + response);
+                        sendResponse(socketOut,
+                                askBack(clientsRequest,
+                                        "это конечно хорошо, но как насчёт Фибоначчи?"));
                         continue;
                     }
 
                     String[] request = clientsRequest.split(" ");
                     if (request.length < 2) {
-                        String response = askBack(clientsRequest,"это замечательно, но нужно соблюсти формат.");
-                        socketOut.println(response);
-                        System.out.println("Отправлено клиенту: " + response);
+                        sendResponse(socketOut,
+                                askBack(clientsRequest,
+                                        "это замечательно, но нужно соблюсти формат."));
                         continue;
                     }
 
@@ -59,20 +58,14 @@ public class Server {
                     try {
                         argument = Integer.parseInt(request[1]);
                     } catch (NumberFormatException e) {
-                        String response = askBack(clientsRequest,"это прикольно, но нужно соблюсти формат.");
-                        socketOut.println(response);
-                        System.out.println("Отправлено клиенту: " + response);
+                        sendResponse(socketOut,
+                                askBack(clientsRequest,
+                                        "это прикольно, но нужно соблюсти формат."));
                         continue;
                     }
 
-                    String response = computingResponse(argument);
-                    socketOut.println(response);
-                    System.out.println("Отправлено клиенту: " + response);
-
-//                    out.write("Значение " + argument + " принято на вычисление."));
-//                    long result = Computer.fibonacci(argument);
-//                    System.out.println("Вычислен результат: " + result);
-//                    out.write("Вычислен %d-й член: %d".formatted(argument, result));
+                    sendResponse(socketOut,
+                            computingResponse(argument));
 
                 }
                 System.out.println("Завершение сеанса с клиентом");
@@ -96,7 +89,6 @@ public class Server {
         long timeOn = System.nanoTime();
         try {
             res = Computer.fibonacci(arg);
-//            Thread.sleep(1500);
             System.out.println("Вычислен результат: " + res);
         } catch (Exception e) {
             return e.getMessage();
@@ -104,5 +96,12 @@ public class Server {
         long time = System.nanoTime() - timeOn;
         return "%d-й член Фибоначчи: %d (вычислен за %s)%n"
                 .formatted(arg, res, Computer.nanoTimeFormatter(time));
+    }
+
+    private static void sendResponse(PrintWriter stream, String msg) {
+        stream.println(msg);
+        System.out.println(msg.equals(WELCOME) ?
+                "Отправлено приветствие" :
+                "Отправлено клиенту: " + msg);
     }
 }

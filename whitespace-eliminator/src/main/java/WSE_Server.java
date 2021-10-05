@@ -37,7 +37,6 @@ public class WSE_Server {
                 consoler("Отправлено приветствие");
                 String nextData = "";
                 while (socketChannel.isConnected()) {
-                    // читаем, что отправил клиент
                     int bytesCount = socketChannel.read(inputBuffer);
                     if (bytesCount == -1) break;
                     if (bytesCount > 0) {
@@ -47,23 +46,15 @@ public class WSE_Server {
                     consoler("Получено от клиента: " + nextData);
                     boolean sessionClosing = "end".equals(nextData) || "terminate".equals(nextData);
 
-                    // если пользователь запросил вывод или вообще выходит, отправляем результат
                     if ("=".equals(nextData) || sessionClosing) {
-                        // получаем обработанный результат
                         String result = processedData.toString();
                         processedData = new StringBuilder();
 
-                        // если результат пустой, говорим об этом
-                        if (result.isBlank()) {
-                            result = sessionClosing ?
-                                    "<завершение сеанса>" :
-                                    "<нет данных для вывода>";
-                        } else if (sessionClosing) {
-                                result += "\n<завершение сеанса>";
-                        }
-                        // отправляем обработанный результат
+                        result = prepareOutput(result, sessionClosing);
+
                         socketChannel.write(transmit(result));
                         consoler("Отправлено клиенту: " + result);
+
                         if ("end".equals(nextData)) {
                             consoler("Завершение сеанса с клиентом");
                         }
@@ -72,7 +63,6 @@ public class WSE_Server {
                             break server;
                         }
                     } else {
-                        // иначе отправляем результат на обработку
                         processedData.append(processString(nextData));
                     }
                 }
@@ -85,7 +75,7 @@ public class WSE_Server {
 
     /**
      * Возвращает байт-буфер для передачи через канал.
-     * Содержание вычисляется на основе переданной строки в указанной кодировке.
+     * Содержание вычисляется на основе переданной строки в кодировке UTF-8.
      * @param msg передаваемое сообщение.
      * @return соответствующий переданному сообщению буфер.
      */
@@ -114,6 +104,28 @@ public class WSE_Server {
      */
     private static void consoler(String event) {
         System.out.println(new SimpleDateFormat("mm:ss - ").format(new Date()) + event);
+    }
+
+    /**
+     * Заменяет или дополняет строку результата перед отправкой в зависимости от того,
+     * является ли строка пустой, и не является ли запрос последним в сессии.
+     * Если строка-аргумент пуста, она заменяется на "<нет данных для вывода>"
+     * (если запрос не финальный) или "<завершение сеанса>" (если запрос финальный).
+     * К непустому аргументу в случае финального запроса добавляется строка "<завершение сеанса>".
+     * @param string исходная строка, подвергаемая условной обработке.
+     * @param exit   является ли подготавливаемый результат последним в сессии.
+     * @return       исходную строку, если она не пуста, а запрос не последний в сессии,
+     * или обработанную строку в ином случае.
+     */
+    private static String prepareOutput(String string, boolean exit) {
+        if (string.isBlank()) {
+            return exit ?
+                    "<завершение сеанса>" :
+                    "<нет данных для вывода>";
+        } else if (exit) {
+            return string + "\n<завершение сеанса>";
+        }
+        return string;
     }
 
 }

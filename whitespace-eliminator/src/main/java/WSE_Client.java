@@ -13,35 +13,24 @@ public class WSE_Client {
         try (socketChannel; Scanner scanner = new Scanner(System.in)) {
             socketChannel.connect(new InetSocketAddress(GUSCI_Config.HOSTNAME, GUSCI_Config.WSE_PORT));
             System.out.println("Соединение с " + socketChannel.getRemoteAddress());
-
-            //  создание входного буфера
             final ByteBuffer inputBuffer = ByteBuffer.allocate(2 << 10);
-            // вывод на экран того, что получили во входной буфер
             System.out.println(new String(inputBuffer.array(), 0,
                     socketChannel.read(inputBuffer), StandardCharsets.UTF_8).trim());
             inputBuffer.clear();
 
-            // создание строки ввода
             String input;
-
+            boolean exit;
             do {
                 input = scanner.nextLine();
-                // отправляем в канал то, что набрали в консоли
                 socketChannel.write(ByteBuffer.wrap(input.getBytes(StandardCharsets.UTF_8)));
-                // если запросили вывод или выход, надо получить данные от сервера
-                if ("=".equals(input) || "terminate".equals(input) || "end".equals(input)) {
-                    // определяем, сколько байт читается с буфера
+                exit = "end".equals(input) || "terminate".equals(input);
+                if ("=".equals(input) || exit) {
                     int bytesCount = socketChannel.read(inputBuffer);
                     inputBuffer.clear();
-                    System.out.println("Ответ сервера:");
-                    // выводим в консоль прочитанные байты как строку
-                    String response = new String(inputBuffer.array(),
-                            0,
-                            bytesCount,
-                            StandardCharsets.UTF_8);
-                    System.out.println(response);
+                    String response = new String(inputBuffer.array(),0, bytesCount, StandardCharsets.UTF_8);
+                    System.out.println("Ответ сервера:\n" + response);
                 }
-            } while (!"end".equals(input) && !"terminate".equals(input));
+            } while (!exit);
             socketChannel.finishConnect();
         }
         System.out.println("\nЗавершение работы");
