@@ -11,7 +11,7 @@ public class WSE_Client {
         final SocketChannel socketChannel = SocketChannel.open();
 
         try (socketChannel; Scanner scanner = new Scanner(System.in)) {
-            socketChannel.connect(new InetSocketAddress(WSE_Config.HOSTNAME, WSE_Config.PORT));
+            socketChannel.connect(new InetSocketAddress(GUSCI_Config.HOSTNAME, GUSCI_Config.WSE_PORT));
             System.out.println("Соединение с " + socketChannel.getRemoteAddress());
 
             //  создание входного буфера

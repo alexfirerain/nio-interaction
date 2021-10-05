@@ -14,16 +14,15 @@ public class Server {
 
         System.out.println("Сервер запускается");
 //        final ServerSocketChannel serverChannel = ServerSocketChannel.open();
-        final ServerSocket serverSocket = new ServerSocket(4160);
+        final ServerSocket serverSocket = new ServerSocket(GUSCI_Config.FBC_PORT);
 //        serverChannel.bind(new InetSocketAddress("localhost", 4160));
         server:
         while (true) {
             try (Socket socket = serverSocket.accept();
                  PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+                 BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream())))
+            {
                 System.out.println("Связались с " + socket.getRemoteSocketAddress());
-
-                final ByteBuffer inputBuffer = ByteBuffer.allocate(2 << 10);
 
                 out.write("""
                                 Здравствуйте, вас приветствует %s!
@@ -89,15 +88,11 @@ public class Server {
         System.out.println("Сервер останавливается");
     }
 
-    private static ByteBuffer askBack(String msg, String answer) {
-        return ByteBuffer.wrap(
-                "%s – %s"
-                .formatted(
+    private static String askBack(String msg, String answer) {
+        return "%s – %s".formatted(
                         msg.length() < CIT_LIMIT ?
                                 msg : msg.substring(0, CIT_LIMIT) + "...",
-                        answer)
-                .getBytes(StandardCharsets.UTF_8)
-        );
+                                answer);
     }
 
     private static String transmit(String msg) {

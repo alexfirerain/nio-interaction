@@ -9,7 +9,7 @@ import java.util.Date;
 
 /**
  * Сервер-Пробелоуничтожитель.
- * При запуске слушает подключения с адреса "WSE_Config.HOSTNAME, WSE_Config.PORT",
+ * При запуске слушает подключения с адреса "GUSCI_Config.HOSTNAME, GUSCI_Config.PORT",
  * принимает строки от клиента и, по строке '=', отдаёт их обратно, но без пробелов.
  * Завершение работы с клиентом осуществляется строкой 'end' от клиента.
  * Остановка работы осуществляется строкой 'terminate' от клиента.
@@ -18,7 +18,7 @@ public class WSE_Server {
 
     public static void main(String[] args) throws IOException {
         final ServerSocketChannel serverChannel = ServerSocketChannel.open();
-        serverChannel.bind(new InetSocketAddress(WSE_Config.HOSTNAME, WSE_Config.PORT));
+        serverChannel.bind(new InetSocketAddress(GUSCI_Config.HOSTNAME, GUSCI_Config.WSE_PORT));
         StringBuilder processedData = new StringBuilder();
         consoler("Сервер запускается");
 
